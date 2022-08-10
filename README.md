@@ -18,6 +18,9 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
 ### Main Menu: ###
 
+![main menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu1.jpg "Main Menu")
+
+
  1) Allow A Domain or IP
  2) Block A Domain or IP
  3) Output or Clear Logs
@@ -29,6 +32,8 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
 
 ### 1) Allow A Domain or IP Sub Menu: 
+
+![Allow A Domain or IP Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu2.jpg "Allow A Domain or IP Sub Menu")
 
  **1) Allow Recently Blocked Domain(s)**
       
@@ -61,6 +66,8 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
 ### 2) Block A Domain or IP Sub Menu:
 
+![Block A Domain or IP Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu3.jpg "Block A Domain or IP Sub Menu")
+
  **1) Deny Domain(s)**
  
   Manually block a domain
@@ -80,6 +87,8 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
 
 ### 3) Output or Clear Logs Sub Menu
+
+![Output or Clear Logs Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu4.jpg "Output or Clear Logs Sub Menu")
 
  **1) Output Blocked Domains (Readable)**
  
