@@ -13,6 +13,8 @@ And now for the usual mumbo jumbo: This script was written for personal use, but
 
 The script is just called **dnshelp** , it is by design made with the intention of being packaged, subject to approval of the packager, of a well maintained dnscrypt-proxy magisk module, but it can be used my anyone with dnscrypt-proxy installed on Android, and with configuration and other userspace files in the usual /sdcard/dnscrypt-proxy/ folder, OR you can adjust the paths in the top of the script if youre for some reason running it outside of the normal path. All you need to do is put the script (ideally) somewhere in your path and set the permissions to 755.
 
+Not all screens are shown below, just the main menu and submenu, and the most useful one that shows the multi seclect "Allow Recently Blocked Domain(s)" function, because thats possibly the best fucntion in the script
+
 
 ## Features (by menu option): ##
 
@@ -41,8 +43,10 @@ The script is just called **dnshelp** , it is by design made with the intention 
 ![Allow A Domain or IP Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu2.jpg "Allow A Domain or IP Sub Menu")
 
  **Allow Recently Blocked Domain(s)**
+ 
+ ![Allow Recently Blocked Domain(s)](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu5.jpg "Allow Recently Blocked Domain(s)")
       
-  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains   in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow, then Enter (type the number       again if you change your mind to deselect). When you have selected all the domains you wish to allow, press Enter. **Thats right, no more       opening a text file to type the name of the domain(s) in manually like a cave person.*
+  This function choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30         domains in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow, then Enter (type the       number again if you change your mind to deselect). When you have selected all the domains you wish to allow, press Enter. **Thats right, no     more opening a text file to type the name of the domain(s) in manually like a cave person.** 
 
   *As noted, currently by default, until someone suggests a better series of number ranges, its 100 last lines, sorted, uniq'd and then the        last 30 domains. If someone has a better theory, im all ears. I can also easily add the ability to read an options file from sdcard so
    you can set your own if theres any interest. Let me know via Issues here, crack one open and make a suggestion....*
