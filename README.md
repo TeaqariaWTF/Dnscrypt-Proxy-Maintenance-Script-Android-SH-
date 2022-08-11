@@ -42,7 +42,7 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
  **Allow Recently Blocked Domain(s)**
       
-  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains    in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow (type the number again if you      change your mind to deselect). When you have selected all the domains you wish to allow, press Enter. **Thats right, no more opening a text    file to type the name of the domain(s) in manually like a cave person.*
+  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains   in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow, then Enter (type the number       again if you change your mind to deselect). When you have selected all the domains you wish to allow, press Enter. **Thats right, no more       opening a text file to type the name of the domain(s) in manually like a cave person.*
 
   *As noted, currently by default, until someone suggests a better series of number ranges, its 100 last lines, sorted, uniq'd and then the        last 30 domains. If someone has a better theory, im all ears. I can also easily add the ability to read an options file from sdcard so
    you can set your own if theres any interest. Let me know via Issues here, crack one open and make a suggestion....*
