@@ -9,9 +9,9 @@ The script is commented pretty well so should be easy to follow...feel free to s
 
 The user interface is designed as best as i could and with the intention of being as compact and usable above a popup keyboard as i could make it.
 
-And now for the usual mumbo jumbo: This script was written for perosnal use, but slaved over to make actually better for release unto you, the great unwashed. It contains nothing that can harm your device, save for the possible loss of data of a few tct fiels whether by misuse or intentional use of the clearing fucntiosn included. as such its up to yuo to assess whether you feel confortable usign the script, and as mentioned its been well commented to give anyone the ability to peruse before use....which is what i always do, check 3rd party code/script before i run it.
+And now for the usual mumbo jumbo: This script was written for personal use, but slaved over to make actually better for release unto you, the great unwashed. It contains nothing that can harm your device, save for the possible loss of data of a few txt files whether by misuse or intentional use of the clearing fucntions included. As such its up to you to assess whether you feel confortable using the script, and as mentioned its been well commented to give anyone the ability to peruse before use....which is what i always do, check 3rd party code/script before i run it.
 
-The script is just called **dnshelp** , it is by design made with the intention of being packaged, subject to approval of the packager, of a well maintained dnscrypt-proxy magisk module, but it can be used my anyone with dnscrypt-proxy installed on Android, and with configuration and other userspace files in the usual /sdcard/dnscrypt-proxy/ folder, OR you can adjust the paths in the top of the script if youre for some reason running it outside of the normal path. Allyou need to do is put the script (ideally) somewher ein your path and set the permissions to 755.
+The script is just called **dnshelp** , it is by design made with the intention of being packaged, subject to approval of the packager, of a well maintained dnscrypt-proxy magisk module, but it can be used my anyone with dnscrypt-proxy installed on Android, and with configuration and other userspace files in the usual /sdcard/dnscrypt-proxy/ folder, OR you can adjust the paths in the top of the script if youre for some reason running it outside of the normal path. All you need to do is put the script (ideally) somewhere in your path and set the permissions to 755.
 
 
 ## Features (by menu option): ##
@@ -42,14 +42,14 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
  **Allow Recently Blocked Domain(s)**
       
-  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains    in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow (type the number again if you      change yuor mind to deselect). When you ahve selected all the domains you wish to allow, press Enter. **Thats right, no more opening a text    file to type the name of the domain(s) in manually like a cave person.*
+  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains    in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow (type the number again if you      change your mind to deselect). When you have selected all the domains you wish to allow, press Enter. **Thats right, no more opening a text    file to type the name of the domain(s) in manually like a cave person.*
 
   *As noted, currently by default, until someone suggests a better series of number ranges, its 100 last lines, sorted, uniq'd and then the        last 30 domains. If someone has a better theory, im all ears. I can also easily add the ability to read an options file from sdcard so
    you can set your own if theres any interest. Let me know via Issues here, crack one open and make a suggestion....*
     
  **Allow Recently Blocked IP(s)**
 
-  *Same multi select menu as for domains, but for logged IP addresses, if yuo have that enabled, of course.*
+  *Same multi select menu as for domains, but for logged IP addresses, if you have that enabled, of course.*
     
  **Allow Domain(s)**
  
@@ -145,7 +145,7 @@ The script is just called **dnshelp** , it is by design made with the intention 
  
 ### Restart DNSCrypt-Proxy (Function)
 
-*No submenu, its simply a function that will just restart dnscrypt-proxy, recommended aftr performing most fucntions, theres a reminder after most functions to do this*
+*No submenu, its simply a function that will just restart dnscrypt-proxy, recommended aftr performing most functions, theres a reminder after most functions to do this*
 
 
 ### Project Stats ###
