@@ -22,10 +22,15 @@ The script is just called **dnshelp** , it is by design made with the intention 
 
 
 **Allow A Domain or IP**
+
 **Block A Domain or IP**
+
 **Output or Clear Logs**
+
 **Sort Allowed Domains/IPs**
+
 **Restart DNSCrypt-Proxy**
+
 **Exit**
 
 ** The main menus status line under the "DnsCrypt-Proxy Maintenance" heading shows the status of dnscrypt proxy, however as you go through the submenus and functions this line changes to show you which menu or function youre currently in 
