@@ -621,7 +621,7 @@ $(greenprint ' R)') Restart DNSCrypt-Proxy
     4)
         sort_files
         ;;		
-    R | r)
+    r)
         restart_dnscryptproxy
         ;;   		
     0)
