@@ -21,76 +21,76 @@ The script is just called **dnshelp** , it is by design made with the intention 
 ![main menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu1.jpg "Main Menu")
 
 
- 1) Allow A Domain or IP
- 2) Block A Domain or IP
- 3) Output or Clear Logs
- 4) Sort Allowed Domains/IPs
- R) Restart DNSCrypt-Proxy
- 0) Exit
+**Allow A Domain or IP**
+**Block A Domain or IP**
+**Output or Clear Logs**
+**Sort Allowed Domains/IPs**
+**Restart DNSCrypt-Proxy**
+**Exit**
 
 ** The main menus status line under the "DnsCrypt-Proxy Maintenance" heading shows the status of dnscrypt proxy, however as you go through the submenus and functions this line changes to show you which menu or function youre currently in 
 
 
-### 1) Allow A Domain or IP Sub Menu: 
+### Allow A Domain or IP Sub Menu: 
 
 ![Allow A Domain or IP Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu2.jpg "Allow A Domain or IP Sub Menu")
 
- **1) Allow Recently Blocked Domain(s)**
+ **Allow Recently Blocked Domain(s)**
       
-   This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains    in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow (type the number again if you      change yuor mind to deselect). When you ahve selected all the domains you wish to allow, press Enter. **Thats right, no more opening a text    file to type the name of the domain(s) in manually like a cave person.**
+  *This menu choice will (by default) grab the last 100 lines of blocked-names.log, sort, then uniq them, and then present the last 30 domains    in a super easy to use multi select menu, where you type the number next to the domain(s) you want to allow (type the number again if you      change yuor mind to deselect). When you ahve selected all the domains you wish to allow, press Enter. **Thats right, no more opening a text    file to type the name of the domain(s) in manually like a cave person.*
+
+  *As noted, currently by default, until someone suggests a better series of number ranges, its 100 last lines, sorted, uniq'd and then the        last 30 domains. If someone has a better theory, im all ears. I can also easily add the ability to read an options file from sdcard so
+   you can set your own if theres any interest. Let me know via Issues here, crack one open and make a suggestion....*
     
-  As noted, currently by default, until someone suggests a better series of number ranges, its 100 last lines, sorted, uniq'd and then the       last 30 domains. If someone has a better theory, im all ears. I can also easily add the ability to read an options file from sdcard so
-  you can set your own if theres any interest. Let me know via Issues here, crack one open and make a suggestion.... 
+ **Allow Recently Blocked IP(s)**
+
+  *Same multi select menu as for domains, but for logged IP addresses, if yuo have that enabled, of course.*
     
- **2) Allow Recently Blocked IP(s)**
+ **Allow Domain(s)**
+ 
+  *Manual domain entry*
+ 
+ **Allow IP(s)**
 
-  Same multi select menu as for domains, but for logged IP addresses, if yuo have that enabled, of course.
+  *Manual IP address entry*
     
- **4) Allow Domain(s)**
+ **Return To Main Menu**
  
-  Manual domain entry
+  *Does what it says*
  
- **5) Allow IP(s)**
+ **Exit**
 
-  Manual IP address entry
-    
- **m) Return To Main Menu**
- 
-  Does what it says
- 
- **0) Exit**
-
-  Also shouldnt be any surprises with what this does
+  *Also shouldnt be any surprises with what this does*
 
 
 
-### 2) Block A Domain or IP Sub Menu:
+### Block A Domain or IP Sub Menu:
 
 ![Block A Domain or IP Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu3.jpg "Block A Domain or IP Sub Menu")
 
- **1) Deny Domain(s)**
+ **Deny Domain(s)**
  
-  Manually block a domain
+ *Manually block a domain*
  
- **2) Deny IP(s)**
+ **Deny IP(s)**
  
-  Manually block an IP
+ *Manually block an IP*
  
- **m) Return To Main Menu**
+ **Return To Main Menu**
  
-  Does what it says
+  *Does what it says*
  
- **0) Exit**
+ **Exit**
 
-  Also shouldnt be any surprises with what this does
+  *Also shouldnt be any surprises with what this does*
 
 
 
-### 3) Output or Clear Logs Sub Menu
+### Output or Clear Logs Sub Menu
 
 ![Output or Clear Logs Sub Menu](https://github.com/stylemessiah/Dnscrypt-Proxy-Maintenance-Script-Android-SH-/blob/main/menu4.jpg "Output or Clear Logs Sub Menu")
 
- **1) Output Blocked Domains (Readable)**
+ **Output Blocked Domains (Readable)**
  
   This chugs through the blocked-names.log file and spits out human (to me, and im barely human) readable entries
     
@@ -107,40 +107,40 @@ The script is just called **dnshelp** , it is by design made with the intention 
   ``` 
   This is useful to me at least, and is used in some of the functions in the script.  
  
- **2) Clear Blocked Domains Log**
+ **Clear Blocked Domains Log**
   
-  Clears the blocked-names.log, because sometimes its good to do some housecleaning
+  *Clears the blocked-names.log, because sometimes its good to do some housecleaning*
   
- **3) Clear Blocked IPs Log**
+ **Clear Blocked IPs Log**
  
-  Clears the blocked-ip.log, because sometimes its good to do some housecleaning
+  *Clears the blocked-ip.log, because sometimes its good to do some housecleaning*
  
- **4) Clear Both Logs**
+ **Clear Both Logs**
  
-  Clears both the blocked-xxxxx.logs, because sometimes its good to do some housecleaning
+  *Clears both the blocked-xxxxx.logs, because sometimes its good to do some housecleaning*
  
- **m) Return To Main Menu**
+ **Return To Main Menu**
   
-  Does what it says
+  *Does what it says*
   
  **0) Exit**
 
-  Also shouldnt be any surprises with what this does
+  *Also shouldnt be any surprises with what this does*
 
 
-### 4) Sort Allowed Domains/IPs (Function)
+### Sort Allowed Domains/IPs (Function)
  
-No submenu, its simply a function that will sort and uniq the following files in the dnscrypt-proxy folder:
+*No submenu, its simply a function that will sort and uniq the following files in the dnscrypt-proxy folder:
  
  allowed-names.txt
  allowed-ips.txt
  blocked-names.txt
- blocked-ips.txt
+ blocked-ips.txt*
  
  
-### R) Restart DNSCrypt-Proxy (Function)
+### Restart DNSCrypt-Proxy (Function)
 
-No submenu, its simply a function that will just restart dnscrypt-proxy, recommended aftr performing most fucntions, theres a reminder after most functions to do this
+*No submenu, its simply a function that will just restart dnscrypt-proxy, recommended aftr performing most fucntions, theres a reminder after most functions to do this*
 
 
 ### Project Stats ###
