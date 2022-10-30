@@ -60,6 +60,9 @@ num_recents=30
 
 ##### Main Script Functions #####
 
+
+
+
 # menu header, also shows dnscrypt-proxy running status in main menu only
 main_menu_header () {
 echo -ne "$(magentaprint ' =====================================')
