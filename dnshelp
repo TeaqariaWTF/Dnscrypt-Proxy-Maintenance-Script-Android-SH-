@@ -60,7 +60,14 @@ num_recents=30
 
 ##### Main Script Functions #####
 
-
+# test for root, because apparently some people are confused that interacting 
+# with a system service isnt available to a normal user account :)
+if [ "$(id -u)" != "0" ]; then
+   echo "Please run this as root!"
+   echo ""
+   echo "Type 'su' in terminal and grant permissions to your terminal app if needed before trying 'dnshelp' again"
+exit 1
+fi
 
 
 # menu header, also shows dnscrypt-proxy running status in main menu only
