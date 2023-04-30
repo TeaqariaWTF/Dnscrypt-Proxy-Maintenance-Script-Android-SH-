@@ -1,0 +1,791 @@
+#!/system/bin/sh
+
+
+##### Global Variables #####
+
+# Colors
+ESC=$(printf '\033') RESET="${ESC}[0m" BLACK="${ESC}[30m" RED="${ESC}[31m"
+GREEN="${ESC}[32m" YELLOW="${ESC}[33m" BLUE="${ESC}[34m" MAGENTA="${ESC}[35m"
+CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
+
+# Color Functions
+greenprint() { printf "${GREEN}%s${RESET}\n" "$1"; }
+blueprint() { printf "${BLUE}%s${RESET}\n" "$1"; }
+redprint() { printf "${RED}%s${RESET}\n" "$1"; }
+yellowprint() { printf "${YELLOW}%s${RESET}\n" "$1"; }
+magentaprint() { printf "${MAGENTA}%s${RESET}\n" "$1"; }
+cyanprint() { printf "${CYAN}%s${RESET}\n" "$1"; }
+
+
+# File path variables
+
+# root dbscrypt-proxy folder
+root_dnscrypt_folder="/storage/emulated/0/dnscrypt-proxy"
+
+# tmp folder for processing
+tmp_folder="$root_dnscrypt_folder/tmp"
+
+# path to dnscrypt-proxy.toml
+config_file="$root_dnscrypt_folder/dnscrypt-proxy.toml"
+
+# paths to allowed and blocked domains and ip files
+allowed_names="$root_dnscrypt_folder/allowed-names.txt"
+allowed_ips="$root_dnscrypt_folder/allowed-ips.txt"
+blocked_names="$root_dnscrypt_folder/blocked-names.txt"
+blocked_ips="$root_dnscrypt_folder/blocked-ips.txt"
+
+# blocked domains logfile
+blocked_names_log="$root_dnscrypt_folder/blocked-names.log"
+
+# blocked domains logfile
+blocked_ips_log="$root_dnscrypt_folder/blocked-ips.log"
+
+# the above in sorted/uniqed and adjusted readable format
+blocked_domains_readable_log="$root_dnscrypt_folder/blocked-domains-readable.log"
+
+
+
+# multi select menu option variables
+
+# number of recent domains or ips to consider from blocked-names.log to be 
+# processed for the allow select menus
+num_recents_lines=100
+
+# number of recent domains or ips to show from the above lines after being
+# sorted and uniq'd, in allow select menus
+num_recents=30 
+
+
+
+
+##### Main Script Functions #####
+
+# test for root, because apparently some people are confused that interacting 
+# with a system service isnt available to a normal user account :)
+if [ "$(id -u)" != "0" ]; then
+   echo "Please run this as root!"
+   echo ""
+   echo "Type 'su' in terminal and grant permissions to your terminal app if needed before trying 'dnshelp' again"
+exit 1
+fi
+
+# menu header, also shows dnscrypt-proxy running status in main menu only
+main_menu_header () {
+echo -ne "$(magentaprint ' =====================================')
+$(magentaprint ' DnsCrypt-Proxy Maintenance')
+$(magentaprint ' =====================================')
+"
+
+#check and display status of dnscrypt proxy
+if pgrep -x dnscrypt-proxy > /dev/null ; then
+    dnscrypt_status=" Dnscrypt-Proxy: $(greenprint 'Running')"
+else
+    dnscrypt_status=" Dnscrypt-Proxy: $(redprint 'NOT Running')"
+fi
+echo -ne "$dnscrypt_status
+$(magentaprint ' =====================================') 
+"
+}
+
+
+
+# submenu menu header, shows submenu OR function name as $1
+sub_menu_header () {
+echo -ne "$(magentaprint ' =====================================')
+$(magentaprint ' DnsCrypt-Proxy Maintenance')
+$(magentaprint ' =====================================')
+" $1"
+$(magentaprint ' =====================================') 
+"
+}
+
+
+# menu footer, shows a standard reminder and prompt and then
+# loads whichever menu/submenu is set as $1 on last line
+menu_footer () {
+echo ''
+echo ' Dont forget to restart DNSCrypt-Proxy'
+echo " (Menu Option 'r'), if you made changes"
+echo ''
+echo ' Press ENTER key to continue'
+head -n 1 >/dev/null
+$1
+}
+
+
+
+# Allow Recent Domains Function
+#
+# allow user to (multi)select from a list of recently blocked domains
+# for the time being that number is set at 30 domains max form the last 
+# 100 log lines, after the blocked-names.log file has been sorted, uniq'd 
+# and blocked domains output in (human - me) readable format
+
+# for example, the included sed pattern
+# sed -e 's/^*.//;s/^[^ ]*\*//;s/^[^[]*\[//g;s/\])$//g' when applied to 
+# the 4th column, turns this:
+
+# [2022-07-01 23:24:23]	127.0.0.1	su.ff.avast.com	*.su.ff.avast.com
+# [2022-07-01 23:25:57]	127.0.0.1	shavar.prod.mozaws.net	*.shavar.prod.mozaws.net (alias for [shavar.services.mozilla.com])
+
+# into this:
+
+# su.ff.avast.com
+# shavar.services.mozilla.com
+
+
+# explanation of sed patterns:
+
+# remove any leading *. from any log lines
+# s/^*.//;
+
+# remove any lines ending with either * or .* from any log lines - this
+# s/^[^ ]*\*//;
+#
+# is useful at least to me  as i have some patterns with wikdcards as well as 
+# normal domains, i.e.:
+#
+# *analytics*
+#
+# this may match with domains like
+# example-analytics.com	
+# and it will appear in the 4th column as analytics*
+#
+# where something that matches as 
+# analytics.example.com	
+# will appear in the 4th column as analytics.*, this pattern removes the wildcards as choices 
+# in the multi select allow list menu
+
+# Finally, the last pattern matches if a square bracketed entry (alias) appears use this instead 
+# of the domain preceeding the (alias) and get everything after the opening square braket, until 
+# the closing one
+#
+# s/^[^[]*\[//g;s/\])$//g
+# 
+# The sed pattern following that (sed -r "/^\r?$/d") just removes any blank lines, so the menu 
+# doesnt include blank/null choices
+
+
+
+allow_rec_domains () {
+# set temp file for storing domains to be used in selective menu and create it
+if ! [ -f $tmp_folder ]; then   
+    mkdir -p $tmp_folder
+	  touch $recent_blocked_names_log
+fi	
+recent_blocked_names_log="$root_dnscrypt_folder/tmp/recent_blocked_names.log"
+
+# create/populate the $recent_blocked_names_log file whcih will be read and created into a multi select menu,
+# using variables for the number of lines to tail from the logfile ($num_recents_lines) which are then sorted, 
+# uniq'd and sedded (see pattern explanation above) to make the menu options human readable and domain based
+
+tail -n "$num_recents_lines" "$blocked_names_log" | cut -f 4 | sort | uniq -i | sed -e 's/^*.//;s/^[^ ]*\*//;s/^[^[]*\[//g;s/\])$//g' | sed -r '/^\r?$/d'  | sort | tail -n "$num_recents"> "$recent_blocked_names_log"
+
+##
+# Multi-select menu in bash script customised from the version here: http://serverfault.com/a/298312
+##
+
+# check for blank last line in $recent_blocked_names_log and add if needed, menu will not 
+# display last line of file (therefore last menu item) without a following blank line
+sed -i -e '$a\' "$recent_blocked_names_log"
+
+#read in list of recent domains from $recent_blocked_names_log and add to options variable
+OLDIFS="$IFS"
+IFS=$'\n'
+options=()
+while read line
+do
+    options=("${options[@]}" "$line")
+done < "$recent_blocked_names_log"
+IFS="$OLDIFS"
+
+#main multi select menu code 
+allow_rec_domain_menu () {
+clear
+sub_menu_header "Allow Recently Blocked Domain(s)"
+    echo " Recently Blocked Domains:"
+    echo ''
+    for i in "${!options[@]}"; do
+        printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+    done
+    echo ''
+    # this line echos if an option is checked/unchecked - not used here by me, but you can enable	
+    # if [[ "$msg" ]]; then echo "$msg"; fi
+}
+echo ''
+prompt="Type number to check/uncheck),\n and press ENTER when done.\n OR press b to go back to menu\n\n "
+while allow_rec_domain_menu && echo -ne " $prompt" && read num && [[ "$num" ]]; do
+    case $num in
+    b)
+        allow_domain_ip
+        ;;
+    *)
+        [[ "$num" != *[![:digit:]]* ]] &&
+        (( num > 0 && num <= ${#options[@]} )) ||
+        { msg="Invalid option: $num"; continue; }
+        ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+        [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"  
+        ;;
+    esac
+done
+
+# output when no IP's have been selected
+printf ' You selected:\n %s\n'; msg=" No Domains"
+
+# loop through the chosen Domain's and write to file
+for i in "${!options[@]}"; do 
+	  # this will write out any ips chosen to the allowed-names.txt file, adding a newline if the last line of file is not blank
+	  # to avoid potentially writing output as append to existing line
+    [[ "${choices[i]}" ]] && { printf " %s\n" "${options[i]}"; msg=""; } && sed -i -e '$a\' "$allowed_names" && echo "${options[i]}" >> "$allowed_names"
+done
+
+echo "$msg"
+
+# unset domain selection variables in case user comes back from main menu and generates a new menu
+unset options
+unset choices
+
+# remove the temporary file
+rm -f "$recent_blocked_names_log"
+
+# display menu footer
+menu_footer allow_domain_ip
+}
+
+
+
+
+# Allow Recent IPs Function
+allow_rec_ips () {
+# set temp file for storing IPs to be used in selective menu and create it
+if ! [ -f $tmp_folder ]; then   
+    mkdir -p $tmp_folder
+	  touch $recent_blocked_ips_log
+fi	
+recent_blocked_ips_log="$root_dnscrypt_folder/tmp/recent-blocked-ips.log"
+
+# create/populate the $recent_blocked_ips_log file which will be read and created into a multi select menu,
+# using variables for the number of lines to tail from the logfile ($num_recents_lines) which are then sorted, 
+# uniq'd to make the menu options
+
+tail -n "$num_recents_lines" "$blocked_ips_log" | sed -r '/^\r?$/d' | sort | uniq -i | tail -n "$num_recents" > "$recent_blocked_ips_log"
+
+##
+# Multi-select menu in bash script customised from the version here: http://serverfault.com/a/298312
+##
+
+# check for blank last line in $recent_blocked_ips_log and add if needed, menu will not 
+# display last line of file (therefore last menu item) without a following blank line
+sed -i -e '$a\' "$recent_blocked_ips_log" "$recent_blocked_ips_log"
+
+#read in list of recent ips from $recent_blocked_ips_log and add to options variable
+OLDIFS="$IFS"
+IFS=$'\n'
+options=()
+while read line
+do
+    options=("${options[@]}" "$line")
+done < "$recent_blocked_ips_log"
+IFS="$OLDIFS"
+
+#main multi select menu code 
+allow_rec_ip_menu () {
+clear
+sub_menu_header "Allow Recently Blocked IP(s)"
+    echo " Recently Blocked IPs:"
+    echo ''
+    for i in "${!options[@]}"; do
+        printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+    done
+    echo ''
+    [[ "$msg" ]] && echo "$msg" && echo ''; :
+}
+echo ''
+prompt="Type number to check/uncheck),\n and press ENTER when done.\n OR press b to go back to menu\n\n "
+while echo '' && allow_rec_ip_menu && read num "$prompt" && [[ "$num" ]]; do
+    case $num in
+    b)
+        allow_domain_ip
+        ;;
+    *)
+        [[ "$num" != *[![:digit:]]* ]] &&
+        (( num > 0 && num <= ${#options[@]} )) ||
+        { msg="Invalid option: $num"; continue; }
+        ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+        [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"  
+        ;;
+    esac
+done
+
+# output when no IP's have been selected
+printf ' You selected:\n %s\n'; msg=" No IPs"
+
+# loop through the chosen IP's and write to file
+for i in "${!options[@]}"; do 
+    [[ "${choices[i]}" ]] && { printf " %s\n" "${options[i]}"; msg=""; } && echo -e "\n" >> "$allowed_ips" && echo "${options[i]}" >> "$allowed_ips"
+done
+
+echo "$msg"
+
+# unset domain selection variables in case user comes back from main menu and generates a new menu
+unset options
+unset choices
+
+# remove the temporary file
+rm -f "$recent_blocked_ips_log"
+
+# display menu footer
+menu_footer allow_domain_ip
+}
+
+
+
+# Allow Domains Function
+allow_domains () {
+clear
+# display header of menu
+sub_menu_header "Allow Domain(s)"
+# display rest of main menu
+echo -ne " Enter Domain to allow\n (or 'b' to go back): "
+read readdomain
+# give user a way to back out to previous menu
+if [[ "$readdomain" == "b" ]]; then
+    menu_footer allow_domain_ip
+else
+write_domain=$(sed -i -e '$a\' "$allowed_names" && echo "$readdomain" >> "$allowed_names")
+echo ''
+if [ "$write_domain" -eq 0 ]; then
+    echo " $readdomain added successfully"
+else
+    echo " $readdomain NOT added successfully"
+    echo " Check $allowed_names exists"
+fi
+fi
+# display menu footer
+menu_footer allow_domain_ip
+}
+
+
+
+# Allow IPs Function
+allow_ips () {
+clear
+# display header of menu
+sub_menu_header "Allow IP(s)"
+# display rest of main menu
+# prompt for ip to allow
+echo -ne " Enter IP to allow\n (or 'b' to go back): "
+read readip
+# give user a way to back out to previous menu
+if [[ "$readip" == "b" ]]; then
+    menu_footer allow_domain_ip
+else
+# check ip entered ($readip) is valid
+read valid <<< $( awk -v ip="$readip" '
+BEGIN { n=split(ip, i,"."); e = 0;
+if (6 < length(ip) && length(ip) < 16 && n == 4 && i[4] > 0 && i[1] > 0){
+    for(z in i){if (i[z] !~ /[0-9]{1,3}/ || i[z] >= 256){e=1;break;}}
+} else { e=1; } print(e);}')
+# if valid add to $allowed_ips
+if [ "$valid" == 0 ]; then
+    echo ' Success: IP Valid'
+	  write_ip=$(sed -i -e '$a\' "$allowed_ips" && echo "$readip" >> "$allowed_ips")
+	  # check it is written to $allowed_ips correctly
+	  if [ "$write_ip" -eq 0 ]; then 
+		    echo " $readip added successfully"
+	  else
+		    echo " $i NOT added successfully"
+		    echo " Check $allowed_ips exists"
+	  fi
+else	
+	  # if ip entered ($readip) is NOT valid, notify and run function again	
+	  echo ' Fail: IP Invalid Entered. Please try again'
+	  allowip
+fi
+fi
+# display menu footer
+menu_footer allow_domain_ip
+}
+
+
+
+# Block Domains Function
+deny_domains () {
+clear
+# display header of menu
+sub_menu_header "Deny Domain(s)"
+# display rest of main menu
+# prompt for domain to block
+echo -ne " Enter Domain to block\n (or 'b' to go back): "
+read readdomain
+# give user a way to back out to previous menu
+if [[ "$readdomain" == "b" ]]; then
+    menu_footer deny_domain_ip
+else
+write_domain=$(sed -i -e '$a\' "$blocked_names" && echo "$readdomain" >> "$blocked_names")
+if [ "$write_domain" -eq 0 ]; then 
+    echo " $readdomain added successfully"
+else
+    echo " $readdomain NOT added successfully"
+    echo " Check $blocked_names exists"
+fi
+fi
+# display menu footer
+menu_footer deny_domain_ip
+}
+
+
+
+# Block IPs Function
+deny_ips () {
+clear
+# display header of menu
+sub_menu_header "Deny IP(s)"
+# display rest of main menu
+# prompt for ip to block
+echo -ne " Enter IP to block\n (or 'b' to go back): "
+read readip
+# give user a way to back out to previous menu
+if [[ "$readip" == "b" ]]; then
+    menu_footer deny_domain_ip
+else
+# check ip entered ($readip) is valid
+read valid <<< $( awk -v ip="$readip" '
+BEGIN { n=split(ip, i,"."); e = 0;
+if (6 < length(ip) && length(ip) < 16 && n == 4 && i[4] > 0 && i[1] > 0){
+    for(z in i){if (i[z] !~ /[0-9]{1,3}/ || i[z] >= 256){e=1;break;}}
+} else { e=1; } print(e);}')
+# if valid add to $blocked_ips
+if [ "$valid" == 0 ]; then
+    echo ' Success: IP Valid'
+    write_ip=$(sed -i -e '$a\' "$blocked_ips" && echo "$readip" >> "$blocked_ips")
+    # check it is written to $blocked_ips correctly
+    if [ "$write_ip" -eq 0 ]; then 
+        echo " $readip added successfully"
+    else
+        echo " $i NOT added successfully"
+        echo " Check $blocked_ips exists"
+    fi
+else
+    # if ip entered ($readip) is NOT valid, notify and run function again
+    echo ' Fail: IP Invalid Entered. Please try again'
+    deny_ips
+fi
+fi
+# display menu footer
+menu_footer deny_domain_ip
+}
+
+
+
+# Output Blocked Domains Function
+#
+# output blocked domains in (human - me) readable format
+#
+# for details on the sed pattern please refer to the Allow Recent Domains Function above
+output_blocked_domains () {
+clear
+# display header of menu
+sub_menu_header "Output Blocked Domains (Readable Format)"
+# display rest of main menu
+tail -30 "$blocked_names_log" | cut -f 4 | sort | uniq -i | sed -e 's/^*.//;s/^[^ ]*\*//;s/^[^[]*\[//g;s/\])$//g' > "$blocked_domains_readable_log"
+echo ' ====================================='
+echo ' Blocked domains - output to file:' 
+echo ''
+echo " $blocked_domains_readable_log"
+echo ' ====================================='
+# display menu footer
+menu_footer output_clear_logs
+}
+
+
+
+clear_domains_log () {
+clear
+# display header of menu
+sub_menu_header "Clear Blocked Domains Log"
+# display rest of main menu
+cleared=$(echo '' > "$blocked_names_log")
+if [ "$cleared" -eq 0 ]; then 
+    echo " $blocked_names_log cleared successfully"
+else
+    echo " $blocked_names_log NOT cleared successfully"
+    echo " Check $blocked_names_log exists"
+fi
+# display menu footer
+menu_footer output_clear_logs
+}
+
+
+
+clear_ips_log () {
+clear
+# display header of menu
+sub_menu_header "Clear Blocked IPs Log"
+# display rest of main menu
+cleared=$(echo '' > "$blocked_ips_log")
+if [ "$cleared" -eq 0 ]; then 
+		echo " $blocked_ips_log cleared successfully"
+else
+		echo " $blocked_ips_log NOT cleared successfully"
+		echo " Check $blocked_ips_log exists"
+fi
+# display menu footer
+menu_footer output_clear_logs
+}
+
+
+
+clear_all_logs () {
+clear
+# display header of menu
+sub_menu_header "Clear Both Logs"
+# display rest of main menu
+logfiles="$blocked_names_log $blocked_ips_log"
+for i in $logfiles
+    do echo '' > "$i"
+    if [ $? -eq 0 ]; then 
+	      echo " $i cleared successfully"
+	  else
+       echo " $i NOT cleared successfully"
+       echo " Check $i exists"
+    fi 
+done
+# display menu footer
+menu_footer output_clear_logs
+}
+
+
+
+# Sort & Uniq Files Function
+sort_files () {
+clear 
+sub_menu_header "Sort Allowed Domains/IPs"
+echo ' Sorting and uniqing files...'
+uniqfiles="$allowed_names $allowed_ips $blocked_names $blocked_ips"
+for i in $uniqfiles; do 
+    sort < "$i" | sed -e 's/[\t ]//g;/^$/d' | uniq -i > "$tmp_folder/tmp.txt" && mv "$tmp_folder/tmp.txt" "$i" || continue
+    if [ $? -eq 0 ]; then 
+       echo -ne "\n$i\n - sorted successfully"
+    else
+       echo -ne "\n$i\n - NOT sorted successfully"
+       echo " Check $i exists"
+    fi 
+done
+echo ' Sorting and uniqing files...complete'
+# display menu footer
+menu_footer main_menu
+}
+
+
+
+# Restart DNSCryprt-Proxy Function
+restart_dnscryptproxy () {
+clear
+sub_menu_header "Restart DNSCrypt-Proxy"
+# kill running dnscrypt-proxy
+until ! pgrep -x dnscrypt-proxy > /dev/null; do
+echo ' dnscrypt-proxy: killing...'
+killall dnscrypt-proxy > /dev/null
+sleep 2
+done
+
+echo ' dnscrypt-proxy: killing...OK'
+
+# run dnscrypt-proxy
+until pgrep -x dnscrypt-proxy > /dev/null; do
+echo ' dnscrypt-proxy: restarting...'
+	/system/bin/dnscrypt-proxy -config $config_file &
+	sleep 2
+done
+echo ' dnscrypt-proxy: restarting...OK'
+echo ' dnscrypt-proxy: restarted' 
+echo ''
+echo ' Press ENTER key to continue'
+# display menu footer
+menu_footer main_menu
+}
+
+
+
+##### Main Menu #####
+main_menu () {
+clear
+# display header of menu
+main_menu_header
+# display rest of main menu
+echo -ne "$(greenprint ' 1)') Allow A Domain or IP
+$(redprint ' 2)') Block A Domain or IP
+$(cyanprint ' 3)') Output or Clear Logs
+$(yellowprint ' 4)') Sort Allowed Domains/IPs
+$(greenprint ' R)') Restart DNSCrypt-Proxy
+ 0) Exit \n
+ Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        allow_domain_ip
+        ;;
+    2)
+        deny_domain_ip
+        ;;        
+    3)
+        output_clear_logs
+        ;;      
+    4)
+        sort_files
+        ;;		
+    r)
+        restart_dnscryptproxy
+        ;;   		
+    0)
+        echo ''
+        echo ' Exiting...'
+        ;;
+    *)
+        echo ' Wrong or no option selected'
+        echo ' Press ENTER key to continue'
+        head -n 1 >/dev/null
+        main_menu
+        ;;
+    esac
+}
+
+
+
+##### Allow Domain or IP Sub Menu #####
+allow_domain_ip () {
+clear
+# display header of menu
+sub_menu_header "Allow A Domain or IP"
+# display rest of main menu
+echo -ne "$(cyanprint ' 1)') Allow Recently Blocked Domain(s) 
+$(cyanprint ' 2)') Allow Recently Blocked IP(s)
+$(greenprint ' 3)') Allow Domain(s) 
+$(greenprint ' 4)') Allow IP(s)
+ m) Return To Main Menu
+ 0) Exit \n
+ Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        allow_rec_domains
+        ;;
+    2)
+        allow_rec_ips
+        ;;        
+    3)
+        allow_domains
+        ;;        
+    4)
+        allow_ips
+        ;;                
+    m)
+        main_menu
+        ;;   	
+    0)
+        echo ''
+        echo ' Exiting...'
+        exit 0
+        ;;
+    *)
+        echo ' Wrong or no option selected'
+        echo ' Press ENTER key to continue'
+        head -n 1 >/dev/null
+        allow_domain_ip
+        ;;
+    esac
+}
+
+
+
+##### Deny Domain or IP Sub Menu #####
+deny_domain_ip () {
+clear
+# display header of menu
+sub_menu_header "Block A Domain or IP"
+# display rest of main menu
+echo -ne "$(redprint ' 1)') Deny Domain(s) 
+$(redprint ' 2)') Deny IP(s)
+ m) Return To Main Menu
+ 0) Exit \n
+ Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        deny_domains
+        ;;        
+    2)
+        deny_ips
+        ;;                
+    m)
+        main_menu
+        ;;   	
+    0)
+        echo '' 
+        echo ' Exiting...'
+        exit 0
+        ;;
+    *)
+        echo ' Wrong or no option selected'
+        echo ' Press ENTER key to continue'
+        head -n 1 >/dev/null
+        deny_domain_ip
+        ;;
+    esac
+}
+
+
+
+##### Output Or Clear Logs Sub Menu #####
+output_clear_logs () {
+clear
+# display header of menu
+sub_menu_header "Output or Clear Logs"
+# display rest of main menu
+echo -ne "$(greenprint ' 1)')  Output Blocked Domains (Readable Format)
+$(redprint ' 2)') Clear Blocked Domains Log
+$(redprint ' 3)') Clear Blocked IPs Log
+$(redprint ' 4)') Clear Both Logs
+ m) Return To Main Menu
+ 0) Exit \n
+ Choose an option:  "
+    read -r ans
+    case $ans in
+	1)
+		output_blocked_domains
+		;;
+    2)
+        clear_domains_log
+        ;;        
+    3)
+        clear_ips_log
+        ;;        
+    4)
+        clear_all_logs
+        ;;        
+    m)
+        main_menu
+        ;;   	
+    0)
+        echo ''
+        echo ' Exiting...'
+        exit 0
+        ;;
+    *)
+        echo ' Wrong or no option selected'
+        echo ' Press ENTER key to continue'
+        head -n 1 >/dev/null
+        output_clear_logs
+        ;;
+    esac
+}
+
+
+# call main menu on script start
+main_menu
+
+# remove tmp folder
+if [ -d "$tmp_folder" ]; then
+rm -rf "$tmp_folder"
+fi
