@@ -1,7 +1,7 @@
 # Dnscrypt-Proxy-Maintenance-Script-Android-SH
 A script to make managing dnscrypt-proxy (hopefully) a little bit easier via terminal on Android
 
-_Note: I am working on a version for PC in Python, and with a compiled Python .exe version for predominantly Windows people like me. Theres no ETA for this, as im literally just starting on it...._
+NOTE: hasnt been maintained as while i had a good enough working version for myself, when i offered it to the dnscrypt proxy module dev, he asked me to polish it for end user use and for inclusion in the module, and so i spent many hours creating the menu and functions you see in it....and then he never did anything with it or maintained contact, so its not had any fixes/updates since the first version. if anyoen wnats fixes or things added, please create an issue, otherwise it wont happen as i dont talk abotu it anywhere else, because well, as mentioned thats largely led to me wasting my time....
 
 Okay so ive been using dnscrypt-proxy off and on for years now, and on a desktop its a little bit easier to maintain via the ease of opening up an allowed or blocked names/ips file and then restarting the service. But on Android its a bit of a pain in the butt. For a while i gave up and used Invisible, but that started annoying me and so i came back to dnscrypt-proxy about a year ago and have been using some terminal hacks to maintain it.
 
